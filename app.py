@@ -13,7 +13,7 @@ def combine_sheets(file_dict):
 @st.cache_data
 def load_data():
     """Loads all Market and Jan Aushadhi files and prepares the Salt Sets."""
-    # 1. LOAD MARKET FILES (Note: Ensure case matches exactly)
+    # 1. LOAD MARKET FILES
     m_int = pd.read_excel("Internal_Medicines_FINAL.xlsx", sheet_name=None)
     m_ext = pd.read_excel("External_Medicines_FINAL.xlsx", sheet_name=None)
     m_spec = pd.read_excel("Specialized_Medicines_FINAL.xlsx", sheet_name=None)
@@ -21,7 +21,7 @@ def load_data():
     market_df = pd.concat([combine_sheets(m_int), combine_sheets(m_ext), combine_sheets(m_spec)], ignore_index=True)
     market_df['source'] = 'market'
 
-    # 2. LOAD JAN AUSHADHI FILES (Corrected Filenames)
+    # 2. LOAD JAN AUSHADHI FILES
     j_int = pd.read_excel("internal_medicines_jan.xlsx", sheet_name=None)
     j_ext = pd.read_excel("external_medicines_jan.xlsx", sheet_name=None)
     j_spec = pd.read_excel("specialised_medicines_jan.xlsx", sheet_name=None)
@@ -93,6 +93,18 @@ if selected_medicine:
     # Get the details of the selected medicine
     input_row = df[df['name'] == selected_medicine].iloc[0]
     
+    # NEW USER INPUTS: Consumption Details
+    with st.expander("📊 Customize Your Savings Calculation", expanded=True):
+        col_input1, col_input2 = st.columns(2)
+        with col_input1:
+            units_per_purchase = st.number_input("Total units purchased each time (e.g. tablets in a strip):", min_value=1, value=10)
+        with col_input2:
+            purchases_per_month = st.number_input("How many times do you purchase this per month?", min_value=1, value=1)
+    
+    # Calculate total units consumed
+    total_monthly_units = units_per_purchase * purchases_per_month
+    total_yearly_units = total_monthly_units * 12
+
     st.info(f"**Selected:** {input_row['name']} | **Category:** {input_row['Header_Category']} | **Price/Unit:** ₹{input_row['price_per_unit']:.2f}")
 
     # FILTER CANDIDATES
@@ -106,13 +118,13 @@ if selected_medicine:
     for _, row in candidates.iterrows():
         match_type = check_strength_match(input_row, row)
         if match_type != "no_match":
-            # REQUIREMENT 2 & 3: Savings and Confidence Logic
+            # REVISED SAVINGS LOGIC: Based on user consumption
             ppu_diff = input_row['price_per_unit'] - row['price_per_unit']
             results.append({
                 "name": row['name'],
                 "price": row['price_per_unit'],
-                "monthly": ppu_diff * 30,
-                "yearly": ppu_diff * 365,
+                "monthly": ppu_diff * total_monthly_units,
+                "yearly": ppu_diff * total_yearly_units,
                 "confidence": "High" if match_type == "exact" else "Medium",
                 "source": row['source']
             })
@@ -122,7 +134,6 @@ if selected_medicine:
         res_df = pd.DataFrame(results).sort_values('price').head(5)
         
         st.subheader("💡 Recommended Alternatives")
-        # REQUIREMENT 3: Advisor Message
         st.warning("📢 **Consult an advisor for better replacement**")
 
         for _, row in res_df.iterrows():
@@ -130,7 +141,6 @@ if selected_medicine:
                 col1, col2, col3 = st.columns([2, 1, 1])
                 
                 with col1:
-                    # REQUIREMENT 4: Jan Aushadhi Tag
                     jan_tag = " ✅ **(Available in Jan Aushadhi list)**" if row['source'] == 'jan' else ""
                     st.markdown(f"#### {row['name']}{jan_tag}")
                     st.write(f"Confidence Score: **{row['confidence']}**")
@@ -139,9 +149,9 @@ if selected_medicine:
                     st.metric("Price per Unit", f"₹{row['price']:.2f}")
                 
                 with col3:
-                    if row['monthly'] > 0:
-                        st.write(f"**Monthly Savings:** ₹{row['monthly']:.2f}")
-                        st.write(f"**Yearly Savings:** ₹{row['yearly']:.2f}")
+                    if row['yearly'] > 0:
+                        st.write(f"**Your Est. Monthly Savings:** ₹{row['monthly']:.2f}")
+                        st.markdown(f"### Yearly Savings: ₹{row['yearly']:.2f}")
                     else:
                         st.write("*(Price is higher or same)*")
     else:
