@@ -134,7 +134,7 @@ if selected_medicine:
         res_df = pd.DataFrame(results).sort_values('price').head(5)
         
         st.subheader("💡 Recommended Alternatives")
-        st.warning("📢 **Consult an advisor for better replacement**")
+        st.warning("📢 **Consult a certified medical professional or pharmacist before switching medications**")
 
         for _, row in res_df.iterrows():
             with st.container(border=True):
