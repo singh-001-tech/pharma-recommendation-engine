@@ -11,6 +11,7 @@ def combine_sheets(file_dict):
 
 @st.cache_data
 def load_data():
+    # Loading your master Excel files
     m_int = pd.read_excel("Internal_Medicines_FINAL.xlsx", sheet_name=None)
     m_ext = pd.read_excel("External_Medicines_FINAL.xlsx", sheet_name=None)
     m_spec = pd.read_excel("Specialized_Medicines_FINAL.xlsx", sheet_name=None)
@@ -70,7 +71,7 @@ try:
     with st.spinner("Initializing 250k+ records..."):
         df = load_data()
 except Exception as e:
-    st.error(f"Error loading files: {e}")
+    st.error(f"Error loading database files: {e}")
     st.stop()
 
 if 'search_term' not in st.session_state:
@@ -96,11 +97,13 @@ if search_query:
             placeholder="Select the exact variant..."
         )
     else:
+        # USES YOUR INTELLIGENCE.PY LOGIC
         with st.spinner("Checking spelling..."):
             suggestion = get_spelling_suggestion(search_query)
         
         if suggestion:
             suggestion_clean = suggestion.strip().lower()
+            # Cross-checking AI suggestion with your Excel data
             ai_matches = df[df['name_clean'].str.contains(suggestion_clean, na=False)]
             
             if not ai_matches.empty:
@@ -109,18 +112,18 @@ if search_query:
                     st.session_state['search_term'] = suggestion
                     st.rerun()
             else:
-                st.error(f"We found '{suggestion}' online, but it isn't in our current database.")
+                st.error(f"We found '{suggestion}' online, but it isn't in our database.")
         else:
             st.error(f"'{search_query}' not found. Please verify the name.")
 
-# --- UPDATED RESULTS SECTION ---
+# --- RESULTS & COMPOSITION SECTION ---
 if selected_medicine:
     input_row = df[df['name'] == selected_medicine].iloc[0]
     
     with st.container(border=True):
         st.success(f"### Selected: {input_row['name']}")
         
-        # Display Salts and Strengths for the selected medicine
+        # MENTION SALT AND STRENGTH ON PAGE
         st.write("**Chemical Composition:**")
         cols = st.columns(3)
         for i in range(1, 4):
