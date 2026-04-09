@@ -59,6 +59,10 @@ def check_strength_match(input_row, candidate_row, tolerance=0.10):
 # ==========================================
 
 st.set_page_config(page_title="Pharma Recommendation Engine", layout="wide", page_icon="💊")
+
+# --- GLOBAL DISCLAIMER ---
+st.error("⚠️ **MEDICAL DISCLAIMER:** This tool is for informational purposes only and is NOT a substitute for professional medical advice. Always consult a certified doctor before changing or starting any medication.")
+
 st.title("💊 Medicine Recommendation & Savings Engine")
 st.markdown("---")
 
@@ -69,11 +73,8 @@ except Exception as e:
     st.error(f"Error loading files: {e}")
     st.stop()
 
-# Initialize Session States
 if 'search_term' not in st.session_state:
     st.session_state['search_term'] = ""
-
-# --- SEARCH UI ---
 
 search_query = st.text_input(
     "Search for your medicine:", 
@@ -112,11 +113,25 @@ if search_query:
         else:
             st.error(f"'{search_query}' not found. Please verify the name.")
 
-# --- RESULTS SECTION ---
-
+# --- UPDATED RESULTS SECTION ---
 if selected_medicine:
     input_row = df[df['name'] == selected_medicine].iloc[0]
-    st.success(f"**Results for:** {input_row['name']}")
+    
+    with st.container(border=True):
+        st.success(f"### Selected: {input_row['name']}")
+        
+        # Display Salts and Strengths for the selected medicine
+        st.write("**Chemical Composition:**")
+        cols = st.columns(3)
+        for i in range(1, 4):
+            salt_name = input_row.get(f'Salt {i} Name')
+            salt_strength = input_row.get(f'Salt {i} Strength')
+            if pd.notna(salt_name) and str(salt_name).lower() != "na":
+                with cols[i-1]:
+                    st.markdown(f"🔬 **{salt_name}**")
+                    st.caption(f"Strength: {salt_strength}")
+    
+    st.markdown("---")
     
     with st.expander("📊 Customize Your Savings Calculation", expanded=True):
         c1, c2 = st.columns(2)
