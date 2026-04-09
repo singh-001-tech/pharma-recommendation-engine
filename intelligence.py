@@ -1,11 +1,9 @@
+import streamlit as st
 import requests
 import json
 
-# ==========================================
-# 1. YOUR API KEY
-# ==========================================
-# Replace the text below with your actual Serper API key
-API_KEY = "SERPER_API_KEY"
+# Correct way to pull from Streamlit Cloud Secrets
+API_KEY = st.secrets["SERPER_API_KEY"]
 
 def get_spelling_suggestion(query):
     """
