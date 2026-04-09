@@ -85,12 +85,9 @@ selected_medicine = None
 
 if search_query:
     query_clean = search_query.strip().lower()
-    # Find all matches that contain the user's text
     matches = df[df['name_clean'].str.contains(query_clean, na=False)]
     
     if not matches.empty:
-        # STEP 1: DROPDOWN MENU IS BACK
-        # This shows the list based on either your typed text OR the AI's corrected text
         selected_medicine = st.selectbox(
             f"Select from {len(matches)} matches found in our database:",
             options=sorted(matches['name'].unique().tolist()),
@@ -98,7 +95,6 @@ if search_query:
             placeholder="Select the exact variant..."
         )
     else:
-        # STEP 2: AI SUGGESTION IF ZERO MATCHES
         with st.spinner("Checking spelling..."):
             suggestion = get_spelling_suggestion(search_query)
         
@@ -108,7 +104,6 @@ if search_query:
             
             if not ai_matches.empty:
                 st.warning(f"No records found for '{search_query}'.")
-                # When clicked, this button updates the search bar and triggers the dropdown
                 if st.button(f"👉 Did you mean: {suggestion}?"):
                     st.session_state['search_term'] = suggestion
                     st.rerun()
