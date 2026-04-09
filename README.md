@@ -37,5 +37,52 @@ I built a custom matching logic to ensure clinical safety and accuracy. Instead 
 
 ---
 
+# 💊 Pharma-Saving-Recommendations-Engine (Phase 2: AI Intelligence Layer)
+
+## **Project Evolution**
+While Phase 1 focused on the clinical accuracy of medicine matching, **Phase 2** elevates the system into a production-ready application by solving for "The Human Element." This phase introduces a multi-tiered search architecture that handles typos, fuzzy queries, and ensures enterprise-grade security for sensitive credentials.
+
+### **Phase 2 Core Impact**
+* **Accessibility:** Enabled users with zero technical medical knowledge to find records despite complex spellings.
+* **Architecture:** Decoupled the AI logic into a modular `intelligence.py` script for better maintainability.
+* **Security:** Implemented zero-leakage protocols for API management using Streamlit Secrets.
+
+---
+
+## **🚀 Key Feature Upgrades**
+
+### **1. Search-Augmented Intelligence (SAI)**
+Integrated the **Serper API** to act as the engine's "Global Brain." 
+- **Auto-Correction:** The system now catches and fixes pharmaceutical typos (e.g., `mteformn` → `Metformin`).
+- **Hybrid Response Handling:** Engineered a custom parser to handle both Google-style "Did you mean" (spelling suggestions) and "Showing results for" (forced corrections).
+
+### **2. Hybrid Fuzzy Search UI**
+Redesigned the search experience to combine the flexibility of text input with the precision of dropdown menus:
+- **Regex Fuzzy Filtering:** Implemented `str.contains()` logic in Pandas to filter 250k+ records in real-time.
+- **Dynamic Selection:** Once the AI identifies the correct salt/brand, the UI dynamically populates a dropdown with specific variants (strengths, forms, and packs) from the local database.
+
+### **3. Enterprise Security & DevOps**
+Shifted from hard-coded configurations to professional environment management:
+- **Secrets Management:** Utilized `st.secrets` (TOML-based) to hide API credentials.
+- **Repository Shielding:** Configured `.gitignore` to prevent accidental exposure of private keys and large-scale Excel databases to public repositories.
+
+---
+
+## **🛠 Phase 2 Technical Stack**
+* **AI Layer:** Serper (Search-Augmented Intelligence)
+* **Frontend/State:** Streamlit (Session State management)
+* **Data Processing:** Pandas (Fuzzy matching & result filtering)
+* **Security:** Streamlit Secrets & Git Version Control
+
+---
+
+## **How it Works: The Intelligence Gate**
+1. **Local Search:** Checks the 250,000+ local records for the exact or partial string.
+2. **AI Correction:** If zero local matches are found, the `intelligence.py` module queries the Serper API.
+3. **Local Validation:** The AI suggestion is cross-referenced with the local dataset to ensure the engine only suggests medicines for which it has pricing data.
+4. **Contextual UI:** The UI triggers a "Did you mean?" prompt, which, when clicked, updates the search state and re-runs the local matching logic.
+
+---
+
 ## **Safety Disclaimer**
 📢 **Note:** This tool is for informational and educational purposes only. Users are strictly advised to **consult a certified medical professional or pharmacist** before switching medications.
