@@ -60,7 +60,6 @@ def check_strength_match(input_row, candidate_row, tolerance=0.10):
 
 st.set_page_config(page_title="Pharma Recommendation Engine", layout="wide", page_icon="💊")
 
-# --- GLOBAL DISCLAIMER ---
 st.error("⚠️ **MEDICAL DISCLAIMER:** This tool is for informational purposes only and is NOT a substitute for professional medical advice. Always consult a certified doctor before changing or starting any medication.")
 
 st.title("💊 Medicine Recommendation & Savings Engine")
@@ -70,7 +69,7 @@ try:
     with st.spinner("Initializing 250k+ records..."):
         df = load_data()
 except Exception as e:
-    st.error(f"Error loading files: {e}")
+    st.error(f"Error loading database files: {e}")
     st.stop()
 
 if 'search_term' not in st.session_state:
@@ -109,7 +108,7 @@ if search_query:
                     st.session_state['search_term'] = suggestion
                     st.rerun()
             else:
-                st.error(f"We found '{suggestion}' online, but it isn't in our current database.")
+                st.error(f"We found '{suggestion}' online, but it isn't in our database.")
         else:
             st.error(f"'{search_query}' not found. Please verify the name.")
 
@@ -118,8 +117,6 @@ if selected_medicine:
     
     with st.container(border=True):
         st.success(f"### Selected: {input_row['name']}")
-        
-        # DISPLAY SALTS AND STRENGTHS
         st.write("**Chemical Composition:**")
         cols = st.columns(3)
         for i in range(1, 4):
