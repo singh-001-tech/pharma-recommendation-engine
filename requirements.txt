@@ -3,3 +3,4 @@ streamlit
 openpyxl
 xlsxwriter
 requests
+rapidfuzz

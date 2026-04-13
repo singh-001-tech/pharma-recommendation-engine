@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from intelligence import get_spelling_suggestion
+from intelligence import get_spelling_suggestion, get_local_fuzzy_suggestion
 
 # ==========================================
 # PART 1: DATA LOADING & MATCHING LOGIC
@@ -77,11 +77,11 @@ def find_matches_for_suggestion(df, suggestion):
     if not matches.empty:
         return matches, suggestion_clean
 
-    # Strategy 2: first word only (handles cases like "Betadine Solution" where DB just has "Betadine ...")
+    # Strategy 2: first word only
     words = suggestion_clean.split()
     if words:
         first_word = words[0]
-        if len(first_word) >= 3:  # avoid single-char or 2-char noise tokens
+        if len(first_word) >= 3:
             matches = df[df['name_clean'].str.contains(first_word, na=False, regex=False)]
             if not matches.empty:
                 return matches, first_word
@@ -141,15 +141,17 @@ if search_query:
         with st.spinner("Checking spelling..."):
             suggestion = get_spelling_suggestion(search_query)
 
+        # If Serper returned nothing, fall back to local fuzzy matching
+        if not suggestion:
+            all_names = df['name_clean'].dropna().unique().tolist()
+            suggestion = get_local_fuzzy_suggestion(search_query.lower(), all_names)
+
         if suggestion:
-            # Try to find DB matches using the multi-strategy matcher
             ai_matches, matched_token = find_matches_for_suggestion(df, suggestion)
 
             if not ai_matches.empty:
                 st.warning(f"No records found for **'{search_query}'**.")
-                if st.button(f"👉 Did you mean: **{suggestion}**?"):
-                    # Set the search term to the matched token (not full suggestion)
-                    # so the subsequent str.contains() in the search box reliably hits
+                if st.button(f"👉 Did you mean: **{suggestion.capitalize()}**?"):
                     st.session_state['search_term'] = matched_token.capitalize()
                     st.rerun()
             else:

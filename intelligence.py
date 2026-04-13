@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import json
+from rapidfuzz import process, fuzz
 
 # Correct way to pull from Streamlit Cloud Secrets
 API_KEY = st.secrets["SERPER_API_KEY"]
@@ -24,7 +25,6 @@ def clean_suggestion(raw):
     """
     result = raw
     for word in NOISE_WORDS:
-        # Use whole-word replacement to avoid partial matches
         result = result.replace(word, "")
     result = " ".join(result.split())  # collapse multiple spaces
     return result.strip().capitalize()
@@ -36,8 +36,7 @@ def get_spelling_suggestion(query):
 
     Strategy:
     - We send the query with extra context ("medicine india") so Google
-      has enough signal to correct even heavily misspelled words like
-      'betadlme' -> 'betadine'.
+      has enough signal to correct even heavily misspelled words.
     - We handle BOTH response formats Google uses:
         1. data["spelling"]                              -> direct correction
         2. data["searchInformation"]["showingResultsFor"] -> forced redirect
@@ -72,10 +71,10 @@ def get_spelling_suggestion(query):
         return None
 
     try:
-        # --- Pass 1: query with context for better Google correction ---
+        # Pass 1: query with context for better Google correction
         raw = query_serper(f"{query} medicine india")
 
-        # --- Pass 2 fallback: bare query, sometimes works better ---
+        # Pass 2 fallback: bare query, sometimes works better
         if not raw:
             raw = query_serper(query)
 
@@ -89,16 +88,32 @@ def get_spelling_suggestion(query):
         return None
 
 
+def get_local_fuzzy_suggestion(query, name_list, threshold=70):
+    """
+    Fallback when Serper returns nothing.
+    Fuzzy-matches the query against all medicine names in the local
+    database using rapidfuzz. Returns the best matching name or None.
+    """
+    query_clean = query.strip().lower()
+    result = process.extractOne(
+        query_clean,
+        name_list,
+        scorer=fuzz.WRatio,
+        score_cutoff=threshold
+    )
+    if result:
+        return result[0]  # returns the matched name
+    return None
+
+
 # Standalone Test Block
 if __name__ == "__main__":
-    import os
-
-    test_cases = ["mteformn", "betadlme", "dol9", "crocn", "azthromycin"]
+    test_cases = ["mteformn", "betadlme", "betadlne", "dol9", "crocn", "azthromycin"]
 
     for test_word in test_cases:
         print(f"\nTesting: '{test_word}'")
         result = get_spelling_suggestion(test_word)
         if result:
-            print(f"  ✅ Corrected to: {result}")
+            print(f"  ✅ Serper corrected to: {result}")
         else:
-            print(f"  ⚠️  No suggestion found.")
+            print(f"  ⚠️  Serper returned nothing — local fuzzy would kick in.")
